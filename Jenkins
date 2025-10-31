@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+        IMAGE_NAME = 'jaginisaiteja/myimage'
+        IMAGE_TAG = 'latest'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Teja-web/Docker_CICD_Integration.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    bat "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                }
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                script {
+                    bat "docker logout"
+                    bat "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
+                }
+            }
+        }
+    }
+}
+
+
